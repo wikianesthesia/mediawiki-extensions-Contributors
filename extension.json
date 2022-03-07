@@ -1,18 +1,19 @@
 {
 	"name": "Contributors",
-	"version": "2.0",
+	"version": "2.0-wikianesthesia",
 	"author": [
 		"Rob Church",
 		"Ike Hecht",
 		"Addshore",
-		"Devirk Rishnan"
+		"Devirk Rishnan",
+		"Chris Rishel"
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:Contributors",
 	"descriptionmsg": "contributors-desc",
 	"type": "specialpage",
 	"license-name": "GPL-2.0-or-later",
 	"requires": {
-		"MediaWiki": ">= 1.35.3"
+		"MediaWiki": ">= 1.35.0"
 	},
 	"SpecialPages": {
 		"Contributors": "SpecialContributors"
@@ -45,7 +46,10 @@
 		"ParserFirstCallInit": "ContributorsHooks::setupParserFunction"
 	},
 	"config": {
-		"ContributorsLinkUsers": true
+		"ContributorsLinkUsers": true,
+		"ContributorsIgnoreUsernames": [],
+		"ContributorsSortByCharactersAdded": false,
+		"ContributorsUseRealName": false
 	},
 	"manifest_version": 1
 }

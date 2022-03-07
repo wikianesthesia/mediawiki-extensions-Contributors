@@ -2,7 +2,8 @@
 	"@metadata": {
 		"authors": [
 			"Rob Church",
-			"Ike Hecht"
+			"Ike Hecht",
+			"Chris Rishel"
 		]
 	},
 	"contributors": "Contributors",
@@ -14,9 +15,11 @@
 	"contributors-subtitle": "Main contributors to $1",
 	"contributors-badtitle": "Invalid title.",
 	"contributors-nosuchpage": "The page $1 does not exist.",
+	"contributors-permissiondenied": "Permission denied.",
 	"contributors-filterip": "Hide IP addresses",
 	"contributors-name": "Username",
 	"contributors-revisions": "Number of revisions",
+	"contributors-characters-added": "Number of characters added",
 	"contributors-first-edit": "Date of first edit",
 	"contributors-last-edit": "Date of last edit",
 	"contributors-add-subpages": "Add subpages",

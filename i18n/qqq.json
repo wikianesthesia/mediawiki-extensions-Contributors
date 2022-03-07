@@ -6,7 +6,8 @@
 			"Liuxinyu970226",
 			"Purodha",
 			"Shirayuki",
-			"Umherirrender"
+			"Umherirrender",
+			"Chris Rishel"
 		]
 	},
 	"contributors": "{{doc-special|Contributors}}\n{{Identical|Contributor}}",
@@ -18,9 +19,11 @@
 	"contributors-subtitle": "Used as <code><nowiki><h2></nowiki></code> heading. Parameters:\n* $1 - a link to the page",
 	"contributors-badtitle": "{{Identical|Invalid title}}",
 	"contributors-nosuchpage": "Parameters:\n* $1 - page name",
+	"contributors-permissiondenied": "Used to report permissions errors",
 	"contributors-filterip": "Checkbox label in the form",
 	"contributors-name": "Name of the field for listing the Username of all the contributors\n{{Identical|Username}}",
 	"contributors-revisions": "Name of the field for listing the number of revisions made by a contributor",
+	"contributors-characters-added": "Name of the field for listing the number of characters added by a contributor",
 	"contributors-first-edit": "Name of the field for listing the date of contributor's first edit to a page",
 	"contributors-last-edit": "Name of the field for listing the date of contributor's last edit to a page",
 	"contributors-add-subpages": "Checkbox label in the form",

@@ -9,211 +9,219 @@
  * @author Ike Hecht
  */
 class SpecialContributors extends IncludableSpecialPage {
-	/** @var string */
-	protected $subpageString;
+    /** @var string */
+    protected $subpageString;
 
-	/** @var FormOptions|null */
-	protected $formOptions;
+    /** @var FormOptions|null */
+    protected $formOptions;
 
-	/** @var Contributors|null */
-	protected $contributorsClass;
+    /** @var Contributors|null */
+    protected $contributorsClass;
 
-	/**
-	 * @param Contributors $contributorsClass
-	 *
-	 * @return Contributors|null Old value
-	 */
-	public function setContributorsClass( Contributors $contributorsClass ) {
-		return wfSetVar( $this->contributorsClass, $contributorsClass );
-	}
+    /**
+     * @param Contributors $contributorsClass
+     *
+     * @return Contributors|null Old value
+     */
+    public function setContributorsClass( Contributors $contributorsClass ) {
+        return wfSetVar( $this->contributorsClass, $contributorsClass );
+    }
 
-	public function __construct() {
-		parent::__construct( 'Contributors' );
-	}
+    public function __construct() {
+        parent::__construct( 'Contributors' );
+    }
 
-	/**
-	 * @param string|null $subpageString
-	 */
-	public function execute( $subpageString ) {
-		$this->subpageString = $subpageString;
-		$output = $this->getOutput();
-		$this->setHeaders();
+    /**
+     * @param string|null $subpageString
+     */
+    public function execute( $subpageString ) {
+        $this->subpageString = $subpageString;
+        $output = $this->getOutput();
+        $this->setHeaders();
 
-		$opts = $this->getOptions();
-		$this->setContributorsClass(
-			new Contributors( Title::newFromText( $opts['target'] ), $opts->getAllValues() )
-		);
+        $opts = $this->getOptions();
 
-		# What are we doing? Different execution paths for inclusion,
-		# direct access and raw access
-		if ( $this->including() ) {
-			$this->showInclude();
-		} elseif ( $opts['action'] == 'raw' ) {
-			$this->showRaw();
-		} else {
-			$output->addHTML( $this->makeForm() );
-			$this->showNormal();
-		}
-	}
+        $targetTitle = Title::newFromText( $opts['target'] );
 
-	/**
-	 * Get the current FormOptions for this request
-	 * Code borrowed from ChangesListSpecialPage
-	 *
-	 * @return FormOptions
-	 */
-	protected function getOptions() {
-		if ( $this->formOptions === null ) {
-			$this->formOptions = $this->setup();
-		}
+        if( !Contributors::userCanGetContributors( $targetTitle ) ) {
+            // TODO error message
+            return;
+        }
 
-		return $this->formOptions;
-	}
+        $this->setContributorsClass(
+            new Contributors( $targetTitle, $opts->getAllValues() )
+        );
 
-	/**
-	 * Create a FormOptions object with options as specified by the user
-	 *
-	 * @return FormOptions
-	 */
-	protected function setup() {
-		$opts = $this->getDefaultOptions();
-		$opts->fetchValuesFromRequest( $this->getRequest() );
-		// Give precedence to target parameter over subpage string
-		if ( !$opts['target'] && $this->subpageString !== null ) {
-			$opts['target'] = $this->subpageString;
-		}
+        # What are we doing? Different execution paths for inclusion,
+        # direct access and raw access
+        if ( $this->including() ) {
+            $this->showInclude();
+        } elseif ( $opts['action'] == 'raw' ) {
+            $this->showRaw();
+        } else {
+            $output->addHTML( $this->makeForm() );
+            $this->showNormal();
+        }
+    }
 
-		return $opts;
-	}
+    /**
+     * Get the current FormOptions for this request
+     * Code borrowed from ChangesListSpecialPage
+     *
+     * @return FormOptions
+     */
+    protected function getOptions() {
+        if ( $this->formOptions === null ) {
+            $this->formOptions = $this->setup();
+        }
 
-	/**
-	 * Get a FormOptions object containing the default options.
-	 *
-	 * @return FormOptions
-	 */
-	protected function getDefaultOptions() {
-		$opts = new FormOptions();
+        return $this->formOptions;
+    }
 
-		$opts->add( 'target', '', FormOptions::STRING );
-		$opts->add( 'filteranon', false );
-		$opts->add( 'pagePrefix', false );
-		$opts->add( 'action', 'view', FormOptions::STRING );
+    /**
+     * Create a FormOptions object with options as specified by the user
+     *
+     * @return FormOptions
+     */
+    protected function setup() {
+        $opts = $this->getDefaultOptions();
+        $opts->fetchValuesFromRequest( $this->getRequest() );
+        // Give precedence to target parameter over subpage string
+        if ( !$opts['target'] && $this->subpageString !== null ) {
+            $opts['target'] = $this->subpageString;
+        }
 
-		return $opts;
-	}
+        return $opts;
+    }
 
-	private function showInclude() {
-		$output = $this->getOutput();
-		$language = $this->getLanguage();
+    /**
+     * Get a FormOptions object containing the default options.
+     *
+     * @return FormOptions
+     */
+    protected function getDefaultOptions() {
+        $opts = new FormOptions();
 
-		if ( !$this->contributorsClass->hasTarget() ) {
-			$output->addHTML( $this->msg( 'contributors-badtitle' )->inContentLanguage()->parseAsBlock() );
-			return;
-		}
-		if ( !$this->contributorsClass->targetExists() ) {
-			$output->addHTML( $this->msg( 'contributors-nosuchpage',
-					$this->contributorsClass->getTargetText() )->inContentLanguage()->parseAsBlock() );
-			return;
-		}
+        $opts->add( 'target', '', FormOptions::STRING );
+        $opts->add( 'filteranon', false );
+        $opts->add( 'pagePrefix', false );
+        $opts->add( 'action', 'view', FormOptions::STRING );
 
-		$outputHtml = $this->contributorsClass->getSimpleList( $language );
-		$output->addHTML( $outputHtml );
-	}
+        return $opts;
+    }
 
-	/**
-	 * Output a machine-readable form of the raw information
-	 */
-	private function showRaw() {
-		$output = $this->getOutput();
-		$output->disable();
-		if ( $this->contributorsClass->targetExists() ) {
-			header( 'Content-type: text/plain; charset=utf-8' );
-			echo $this->contributorsClass->getRawList();
-		} else {
-			header( 'Status: 404 Not Found', true, 404 );
-			echo ( $this->msg(
-				'contributors-nosuchpage', $this->contributorsClass->getTargetText() )->escaped() );
-		}
-	}
+    private function showInclude() {
+        $output = $this->getOutput();
+        $language = $this->getLanguage();
 
-	private function showNormal() {
-		$output = $this->getOutput();
-		if ( !$this->contributorsClass->hasTarget() ) {
-			return;
-		}
+        if ( !$this->contributorsClass->hasTarget() ) {
+            $output->addHTML( $this->msg( 'contributors-badtitle' )->inContentLanguage()->parseAsBlock() );
+            return;
+        }
+        if ( !$this->contributorsClass->targetExists() ) {
+            $output->addHTML( $this->msg( 'contributors-nosuchpage',
+                $this->contributorsClass->getTargetText() )->inContentLanguage()->parseAsBlock() );
+            return;
+        }
 
-		if ( !$this->contributorsClass->targetExists() ) {
-			$output->addHTML( $this->msg( 'contributors-nosuchpage',
-				$this->contributorsClass->getTargetText() )->parseAsBlock() );
-			return;
-		}
-		$target = $this->contributorsClass->getTarget();
-		$articleId = $this->contributorsClass->getTarget()->getArticleID();
-		$opts = $this->contributorsClass->getOptions();
-		$linkRenderer = $this->getLinkRenderer();
-		$link = $linkRenderer->makeKnownLink( $this->contributorsClass->getTarget() );
-		$this->getOutput()->addHTML( '<h2>' . $this->msg( 'contributors-subtitle' )
-				->rawParams( $link )->escaped() . '</h2>' );
+        $outputHtml = $this->contributorsClass->getSimpleList( $language );
+        $output->addHTML( $outputHtml );
+    }
 
-		$out = $this->getOutput();
-		$pager = new ContributorsTablePager( $articleId, $opts, $target );
-		$pager->doQuery();
-		$result = $pager->getResult();
-		if ( $result && $result->numRows() !== 0 ) {
-			$out->addHTML( $pager->getNavigationBar() .
-				Xml::tags( 'ul', [ 'class' => 'plainlinks' ], $pager->getBody() ) .
-				$pager->getNavigationBar() );
-		} else {
-			$out->addWikiMsg( 'contributors-nosuchpage',
-				$this->contributorsClass->getTargetText()
-			);
-		}
-	}
+    /**
+     * Output a machine-readable form of the raw information
+     */
+    private function showRaw() {
+        $output = $this->getOutput();
+        $output->disable();
+        if ( $this->contributorsClass->targetExists() ) {
+            header( 'Content-type: text/plain; charset=utf-8' );
+            echo $this->contributorsClass->getRawList();
+        } else {
+            header( 'Status: 404 Not Found', true, 404 );
+            echo ( $this->msg(
+                'contributors-nosuchpage', $this->contributorsClass->getTargetText() )->escaped() );
+        }
+    }
 
-	/**
-	 * Make a nice little form so the user can enter a title and so forth
-	 * in normal output mode
-	 *
-	 * @return string
-	 */
-	private function makeForm() {
-		$opts = $this->getOptions();
+    private function showNormal() {
+        $output = $this->getOutput();
+        if ( !$this->contributorsClass->hasTarget() ) {
+            return;
+        }
 
-		$formDescriptor = [
-			'target' => [
-				'name' => 'target',
-				'label-message' => 'contributors-target',
-				'type' => 'title',
-				'size' => 40,
-				'id' => 'target',
-				'default' => $this->contributorsClass->getTargetText()
-			],
-			'filteranon' => [
-				'name' => 'filteranon',
-				'label-message' => 'contributors-filterip',
-				'type' => 'check',
-				'checked' => $opts['filteranon']
-			],
-			'pagePrefix' => [
-				'name' => 'pagePrefix',
-				'label-message' => 'contributors-add-subpages',
-				'type' => 'check',
-				'checked' => $opts['pagePrefix']
-			],
+        if ( !$this->contributorsClass->targetExists() ) {
+            $output->addHTML( $this->msg( 'contributors-nosuchpage',
+                $this->contributorsClass->getTargetText() )->parseAsBlock() );
+            return;
+        }
+        $target = $this->contributorsClass->getTarget();
+        $articleId = $this->contributorsClass->getTarget()->getArticleID();
+        $opts = $this->contributorsClass->getOptions();
+        $linkRenderer = $this->getLinkRenderer();
+        $link = $linkRenderer->makeKnownLink( $this->contributorsClass->getTarget() );
+        $this->getOutput()->addHTML( '<h2>' . $this->msg( 'contributors-subtitle' )
+                ->rawParams( $link )->escaped() . '</h2>' );
 
-		];
-		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
-		return $htmlForm->setWrapperLegendMsg( 'contributors-legend' )
-			->setSubmitTextMsg( 'contributors-submit' )
-			->setMethod( 'get' )
-			->prepareForm()
-			->getHTML( false );
-	}
+        $out = $this->getOutput();
+        $pager = new ContributorsTablePager( $articleId, $opts, $target );
+        $pager->doQuery();
+        $result = $pager->getResult();
+        if ( $result && $result->numRows() !== 0 ) {
+            $out->addHTML( $pager->getNavigationBar() .
+                Xml::tags( 'ul', [ 'class' => 'plainlinks' ], $pager->getBody() ) .
+                $pager->getNavigationBar() );
+        } else {
+            $out->addWikiMsg( 'contributors-nosuchpage',
+                $this->contributorsClass->getTargetText()
+            );
+        }
+    }
 
-	/**
-	 * @inheritDoc
-	 */
-	protected function getGroupName() {
-		return 'pages';
-	}
+    /**
+     * Make a nice little form so the user can enter a title and so forth
+     * in normal output mode
+     *
+     * @return string
+     */
+    private function makeForm() {
+        $opts = $this->getOptions();
+
+        $formDescriptor = [
+            'target' => [
+                'name' => 'target',
+                'label-message' => 'contributors-target',
+                'type' => 'title',
+                'size' => 40,
+                'id' => 'target',
+                'default' => $this->contributorsClass->getTargetText()
+            ],
+            'filteranon' => [
+                'name' => 'filteranon',
+                'label-message' => 'contributors-filterip',
+                'type' => 'check',
+                'checked' => $opts['filteranon']
+            ],
+            'pagePrefix' => [
+                'name' => 'pagePrefix',
+                'label-message' => 'contributors-add-subpages',
+                'type' => 'check',
+                'checked' => $opts['pagePrefix']
+            ],
+
+        ];
+        $htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
+        return $htmlForm->setWrapperLegendMsg( 'contributors-legend' )
+            ->setSubmitTextMsg( 'contributors-submit' )
+            ->setMethod( 'get' )
+            ->prepareForm()
+            ->getHTML( false );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getGroupName() {
+        return 'pages';
+    }
 }
