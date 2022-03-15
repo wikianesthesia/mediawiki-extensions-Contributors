@@ -8,7 +8,7 @@
 		"Devirk Rishnan",
 		"Chris Rishel"
 	],
-	"url": "https://www.mediawiki.org/wiki/Extension:Contributors",
+	"url": "https://github.com/wikianesthesia/mediawiki-extensions-Contributors",
 	"descriptionmsg": "contributors-desc",
 	"type": "specialpage",
 	"license-name": "GPL-2.0-or-later",
